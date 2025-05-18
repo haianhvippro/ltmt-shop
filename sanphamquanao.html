@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách sản phẩm</title>
+  <link rel="stylesheet" href="sanphamquanao.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🛍️ Sản phẩm quần áo</h1>
+
+    <!-- Bộ lọc -->
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="🔍 Tìm sản phẩm..." onkeyup="filterProducts()">
+      <select id="typeFilter" onchange="filterProducts()">
+        <option value="">-- Loại sản phẩm --</option>
+        <option value="áo">Áo</option>
+        <option value="quần">Quần</option>
+        <option value="váy">Váy</option>
+        <option value="đầm">Đầm</option>
+      </select>
+      <select id="genderFilter" onchange="filterProducts()">
+        <option value="">-- Giới tính --</option>
+        <option value="nam">Nam</option>
+        <option value="nữ">Nữ</option>
+        <option value="trẻ em">Trẻ em</option>
+      </select>
+      <select id="materialFilter" onchange="filterProducts()">
+        <option value="">-- Loại vải --</option>
+        <option value="cotton">Cotton</option>
+        <option value="lenin">Lenin</option>
+        <option value="lụa">Lụa</option>
+        <option value="jeans">Jeans</option>
+        <option value="nỉ">Nỉ</option>
+      </select>
+    </div>
+
+    <!-- Lưới sản phẩm -->
+    <div class="product-grid" id="productGrid">
+      <p>Đang tải sản phẩm...</p>
+    </div>
+  </div>
+
+  <!-- Giỏ hàng -->
+  <div id="cart-icon" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</div>
+  <div id="cart-popup" class="hidden">
+    <h2>🛒 Giỏ hàng của bạn</h2>
+    <div id="cart-items"></div>
+    <p class="total">Tổng: <span id="cart-total">0đ</span></p>
+    <button onclick="clearCart()">🧹 Xóa giỏ hàng</button>
+    <a href="thanhtoan.html" onclick="prepareCheckout()" class="checkout-button">💳 Thanh toán</a>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbycHXzcZzUxD5V6Po311fgxOi9SF0OCw20Lo5lx5PQnokKW48c7j8v2e74Sz-QvqNOYlw/exec?action=getProducts';
+
+    async function loadProducts() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          renderProducts(data);
+        } else {
+          document.getElementById("productGrid").innerHTML = "<p>Không thể tải sản phẩm.</p>";
+        }
+      } catch (err) {
+        document.getElementById("productGrid").innerHTML = "<p>Lỗi khi tải sản phẩm.</p>";
+        console.error(err);
+      }
+    }
+
+    function renderProducts(products) {
+      const grid = document.getElementById("productGrid");
+      grid.innerHTML = "";
+
+      products.forEach(product => {
+        const original = product.discount ? `<span class="original-price">${Number(product.price).toLocaleString("vi-VN")}đ</span>` : "";
+        const sale = `<span class="sale-price">${Number(product.discount || product.price).toLocaleString("vi-VN")}đ</span>`;
+
+        const card = document.createElement("div");
+        card.className = "product-card";
+        card.setAttribute("data-type", product.type.toLowerCase());
+        card.setAttribute("data-gender", product.gender.toLowerCase());
+        card.setAttribute("data-material", product.material.toLowerCase());
+
+        card.innerHTML = `
+          <img src="${product.image}" alt="${product.name}">
+          <h2>${product.name}</h2>
+          <p class="code">Mã: ${product.code}</p>
+          <p class="price">${original} ${sale}</p>
+          <button class="add-to-cart">🛒 Thêm vào giỏ</button>
+        `;
+
+        card.querySelector(".add-to-cart").addEventListener("click", () => {
+          const name = product.name;
+          const code = product.code;
+          const price = parseInt(product.discount || product.price);
+          cart.push({ name, code, price });
+          updateCartUI();
+        });
+
+        grid.appendChild(card);
+      });
+
+      filterProducts();
+    }
+
+    function filterProducts() {
+      const searchText = document.getElementById("searchInput").value.toLowerCase();
+      const type = document.getElementById("typeFilter").value.toLowerCase();
+      const gender = document.getElementById("genderFilter").value.toLowerCase();
+      const material = document.getElementById("materialFilter").value.toLowerCase();
+      const products = document.querySelectorAll(".product-card");
+
+      products.forEach(product => {
+        const name = product.querySelector("h2").textContent.toLowerCase();
+        const productType = product.getAttribute("data-type");
+        const productGender = product.getAttribute("data-gender");
+        const productMaterial = product.getAttribute("data-material");
+
+        const matchesSearch = name.includes(searchText);
+        const matchesType = !type || productType === type;
+        const matchesGender = !gender || productGender === gender;
+        const matchesMaterial = !material || productMaterial === material;
+
+        product.style.display = matchesSearch && matchesType && matchesGender && matchesMaterial ? "flex" : "none";
+      });
+    }
+
+    // Giỏ hàng
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    function updateCartUI() {
+      const cartCount = document.getElementById("cart-count");
+      const cartItems = document.getElementById("cart-items");
+      const cartTotal = document.getElementById("cart-total");
+
+      cartCount.textContent = cart.length;
+
+      let html = "";
+      let total = 0;
+
+      cart.forEach(item => {
+        html += `<div><strong>${item.name}</strong><br>Mã: ${item.code}<br>Giá: ${item.price.toLocaleString("vi-VN")}đ</div>`;
+        total += item.price;
+      });
+
+      cartItems.innerHTML = html;
+      cartTotal.textContent = total.toLocaleString("vi-VN") + "đ";
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    function toggleCart() {
+      document.getElementById("cart-popup").classList.toggle("hidden");
+    }
+
+    function clearCart() {
+      cart = [];
+      updateCartUI();
+    }
+
+    function prepareCheckout() {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    // Mật khẩu để vào trang đăng sản phẩm
+    document.querySelector("h1").addEventListener("click", function () {
+      const pass = prompt("");
+      if (pass === "mongthulythi14011982") {
+        window.location.href = "dangsanpham.html";                                                                      //(passssssssss)(mongthulythi14011982)
+      } else if (pass !== null) {
+        alert("không có gì hết hãy thoát ra!");
+      }
+    });
+
+    loadProducts();
+    updateCartUI();
+  </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng sản phẩm</title>
+  <style>
+    /* ... giữ nguyên style như bạn đã có ... */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      padding: 40px;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    input[readonly] {
+      background-color: #eee;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>📦 Đăng sản phẩm mới</h2>
+    <form id="productForm">
+      <label for="name">Tên sản phẩm</label>
+      <input type="text" id="name" required>
+
+      <label for="code">Mã sản phẩm (tự sinh)</label>
+      <input type="text" id="code" readonly required>
+
+      <label for="price">Giá</label>
+      <input type="number" id="price" required>
+
+      <label for="discount">Giá giảm (nếu có)</label>
+      <input type="number" id="discount">
+
+      <label for="type">Loại sản phẩm</label>
+      <select id="type" required>
+        <option value="">-- Chọn loại --</option>
+        <option value="áo">Áo</option>
+        <option value="quần">Quần</option>
+        <option value="váy">Váy</option>
+        <option value="đầm">Đầm</option>
+        <option value="khác">Khác</option>
+      </select>
+
+      <label for="gender">Giới tính</label>
+      <select id="gender" required>
+        <option value="">-- Chọn giới tính --</option>
+        <option value="nam">Nam</option>
+        <option value="nữ">Nữ</option>
+        <option value="trẻ em">Trẻ em</option>
+        <option value="unisex">Unisex</option>
+      </select>
+
+      <label for="material">Chất liệu</label>
+      <select id="material" required>
+        <option value="">-- Chọn chất liệu --</option>
+        <option value="cotton">Cotton</option>
+        <option value="lụa">Lụa</option>
+        <option value="lenin">Lenin</option>
+        <option value="jeans">Jeans</option>
+        <option value="nỉ">Nỉ</option>
+        <option value="khác">Khác</option>
+      </select>
+
+      <label for="imageFile">Ảnh sản phẩm (tự sinh URL)</label>
+      <input type="file" id="imageFile" accept="image/*" required>
+
+      <input type="hidden" id="image"> <!-- URL ảnh sau khi upload -->
+
+      <button type="submit">Gửi</button>
+      <p id="result"></p>
+    </form>
+  </div>
+
+<script>
+  const imgbbAPIKey = "a8de3a3280c2f3c7f238e2b043cc08c9"; // <- thay bằng API key thật của bạn
+
+  function generateProductCode() {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    let code = "";
+    for (let i = 0; i < 2; i++) code += letters.charAt(Math.floor(Math.random() * letters.length));
+    for (let i = 0; i < 4; i++) code += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    return code;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("code").value = generateProductCode();
+  });
+
+  document.getElementById('productForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const resultEl = document.getElementById("result");
+    resultEl.textContent = "⏳ Đang xử lý ảnh...";
+    resultEl.className = "";
+
+    const file = document.getElementById("imageFile").files[0];
+    if (!file) {
+      resultEl.textContent = "❌ Vui lòng chọn ảnh";
+      resultEl.className = "error";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = function () {
+      const base64Img = reader.result.split(",")[1];
+
+      const formData = new FormData();
+      formData.append("image", base64Img);
+
+      fetch(`https://api.imgbb.com/1/upload?key=${imgbbAPIKey}`, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        const imageUrl = data.data.url;
+        document.getElementById("image").value = imageUrl;
+        submitProduct(imageUrl);
+      })
+      .catch(() => {
+        resultEl.textContent = "❌ Không thể tải ảnh lên. Hãy thử lại.";
+        resultEl.className = "error";
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function submitProduct(imageUrl) {
+    const resultEl = document.getElementById("result");
+
+    const data = {
+      action: "addProduct",
+      name: document.getElementById("name").value,
+      code: document.getElementById("code").value,
+      price: document.getElementById("price").value,
+      discount: document.getElementById("discount").value,
+      type: document.getElementById("type").value,
+      gender: document.getElementById("gender").value,
+      material: document.getElementById("material").value,
+      image: imageUrl
+    };
+
+    fetch("https://script.google.com/macros/s/AKfycbycHXzcZzUxD5V6Po311fgxOi9SF0OCw20Lo5lx5PQnokKW48c7j8v2e74Sz-QvqNOYlw/exec", {
+      method: "POST",
+      body: new URLSearchParams(data)
+    })
+    .then(res => res.json())
+    .then(response => {
+      if (response.status === "success") {
+        resultEl.textContent = "✅ " + response.message;
+        resultEl.className = "success";
+        document.getElementById("productForm").reset();
+        document.getElementById("code").value = generateProductCode();
+      } else {
+        resultEl.textContent = "❌ " + response.message;
+        resultEl.className = "error";
+      }
+    })
+    .catch(error => {
+      console.error("Lỗi:", error);
+      resultEl.textContent = "❌ Đã xảy ra lỗi khi gửi dữ liệu.";
+      resultEl.className = "error";
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Hóa đơn thanh toán</title>
+  <link rel="stylesheet" href="thanhtoan.css">
+</head>
+
+<script>
+  function formatDateTime(date) {
+    const options = {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    };
+    return date.toLocaleString('vi-VN', options);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const now = new Date();
+    document.getElementById("invoice-date").textContent = "🕒 Ngày giờ: " + formatDateTime(now);
+  });
+</script>
+
+<body>
+  <div class="invoice-container" id="invoice">
+    <h1>🧾 Hóa đơn mua hàng</h1>
+    <p class="invoice-date" id="invoice-date"></p>
+
+    <!-- Cảm ơn -->
+    <div class="thankyou-box">
+      🎉 Cảm ơn bạn đã mua hàng tại shop! Hẹn gặp lại bạn lần sau!
+    </div>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>Sản phẩm</th>
+          <th>Mã</th>
+          <th>Số lượng</th>
+          <th>Giá gốc</th>
+          <th>Giá giảm</th>
+          <th>Thành tiền</th>
+        </tr>
+      </thead>
+      <tbody id="invoice-items"></tbody>
+    </table>
+
+    <p class="total-amount">Tổng cộng: <span id="invoice-total">0đ</span></p>
+
+    <div class="info-note">
+      📸 Vui lòng chụp màn hình đơn hàng và nhắn tin cho chúng tôi qua Zalo
+    </div>
+
+    <div class="button-container">
+      <a href="https://zalo.me/0902850736" target="_blank" class="zalo-button">💬 Nhắn Zalo</a>
+      <button onclick="downloadInvoice()" class="download-button">📥 Tải hóa đơn</button>
+    </div>
+  </div>
+
+  <script>
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    function renderInvoice() {
+      const itemsContainer = document.getElementById("invoice-items");
+      const totalDisplay = document.getElementById("invoice-total");
+
+      const grouped = {};
+      let total = 0;
+
+      cart.forEach(item => {
+        const key = item.code;
+        if (!grouped[key]) {
+          grouped[key] = { ...item, quantity: 1 };
+        } else {
+          grouped[key].quantity += 1;
+        }
+      });
+
+      itemsContainer.innerHTML = "";
+      Object.values(grouped).forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.code}</td>
+          <td>${item.quantity}</td>
+          <td>${(item.originalPrice || item.price).toLocaleString("vi-VN")}đ</td>
+          <td>${item.price.toLocaleString("vi-VN")}đ</td>
+          <td>${itemTotal.toLocaleString("vi-VN")}đ</td>
+        `;
+        itemsContainer.appendChild(row);
+      });
+
+      totalDisplay.textContent = total.toLocaleString("vi-VN") + "đ";
+    }
+
+    function downloadInvoice() {
+      const invoice = document.getElementById("invoice");
+      const opt = {
+        margin: 0.5,
+        filename: "hoa-don.pdf",
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(invoice).save();
+    }
+
+    renderInvoice();
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</body>
+</html>

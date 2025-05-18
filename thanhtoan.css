@@ -1,0 +1,120 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f7f8fa;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+
+.invoice-container {
+  background: #fff;
+  padding: 30px;
+  max-width: 700px;
+  margin: auto;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.invoice-container h1 {
+  text-align: center;
+  color: #2c3e50;
+}
+
+.thankyou-box {
+  background: #e0f7e9;
+  border: 2px dashed #28a745;
+  padding: 15px 20px;
+  margin: 20px auto;
+  font-size: 16px;
+  color: #155724;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 999px;
+  max-width: 600px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.invoice-table th,
+.invoice-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}
+
+.invoice-table th {
+  background-color: #f0f0f0;
+}
+
+.total-amount {
+  font-size: 18px;
+  text-align: right;
+  margin-top: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.info-note {
+  margin: 25px 0 10px;
+  font-style: italic;
+  text-align: center;
+  color: #d63384;
+  font-weight: bold;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.zalo-button, .download-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: none;
+  color: white;
+  transition: background 0.3s ease;
+}
+
+.zalo-button {
+  background-color: #0084ff;
+}
+
+.zalo-button:hover {
+  background-color: #006edc;
+}
+
+.download-button {
+  background-color: #28a745;
+}
+
+.download-button:hover {
+  background-color: #218838;
+}
+.info-note {
+  margin: 25px 0 10px;
+  font-style: italic;
+  text-align: center;
+  color: #c82333;
+  font-weight: bold;
+  background-color: #fff3cd;
+  border: 2px dashed #ffc107;
+  padding: 15px 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+.invoice-date {
+  font-size: 14px;
+  color: #555;
+  text-align: center;
+  margin-bottom: 10px;
+}
